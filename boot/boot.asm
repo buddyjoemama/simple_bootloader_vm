@@ -9,6 +9,8 @@ ORG 0x7C00            ; BIOS loads boot sector at memory address 0x7C00
 
 start:
     cli               ; Clear Interrupt Flag - disable interrupts during setup
+    ; Save the boot drive number that BIOS provided in DL register
+    mov [BootDrive], dl   ; Save BIOS drive number to memory FIRST before we lose it
     xor ax, ax        ; Set AX register to 0 (XOR with itself = 0)
     mov ds, ax        ; Set Data Segment to 0 (DS = 0)
     mov es, ax        ; Set Extra Segment to 0 (ES = 0) 
@@ -40,7 +42,7 @@ start:
     ; Read loop using CHS, sector increments, track wraps after sector 18
     ; CHS addressing for 1.44MB floppy: 80 tracks, 2 heads, 18 sectors/track
     ; We'll assume floppy geometry for simplicity, which works fine in VMs for a 1.44MB img.
-    mov bp, 2             ; Start at sector 2 (sector numbering starts at 1, sector 1 is boot sector)
+    mov bp, 2             ; Start at sector 2 (Makefile seek=1 puts kernel at LBA 1, which is CHS sector 2)
     xor cx, cx            ; Clear CX register (CH = track number, initially 0)
     xor dx, dx            ; Clear DX register 
     mov dh, 0             ; Set head to 0 (redundant but explicit)
@@ -125,8 +127,8 @@ boot_msg db "Booting tiny OS...", 0x0D,0x0A, 0    ; Boot message with carriage r
 jump_msg db "Jumping to kernel...", 0x0D,0x0A, 0  ; Jump message with carriage return, line feed, null terminator  
 err_msg  db "Disk read error", 0                   ; Error message with null terminator
 
-; BIOS sets this; we copy it from DL at entry. Keep at fixed place if needed.
-BootDrive db 0        ; Storage for boot drive number (set by BIOS)
+; BIOS sets DL register; we save it here at startup for later use.
+BootDrive db 0        ; Storage for boot drive number (saved from BIOS DL register)
 
 ; Boot signature - BIOS looks for 0xAA55 at end of boot sector
 times 510 - ($ - $$) db 0    ; Fill remaining space with zeros up to byte 510
