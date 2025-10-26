@@ -21,7 +21,7 @@ $(BUILD):
 $(BUILD)/boot.bin: $(BOOT)/boot.asm | $(BUILD)
 	$(NASM) -f bin -o $@ $<
 
-$(BUILD)/kernel.bin: $(KERNEL)/kernel.asm | $(BUILD)
+$(BUILD)/kernel.bin: $(KERNEL)/kernel_graphics.asm | $(BUILD)
 	$(NASM) -f bin -o $@ $<
 
 $(BUILD)/disk.img: $(BUILD)/boot.bin $(BUILD)/kernel.bin | $(BUILD)
